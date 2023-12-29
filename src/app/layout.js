@@ -4,7 +4,7 @@ import NavBar from '@/components/NavBar'
 import Footer from '@/components/Footer'
 import HomePage from '@/components/HomePage'
 import ProductLists from '@/components/ProductLists'
-
+import ReduxProvider from '@/provider/redux/ReduxProvider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
@@ -14,6 +14,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+    <ReduxProvider>
     <html lang="en">
       <body className={inter.className}>
         <NavBar/>
@@ -23,5 +24,6 @@ export default function RootLayout({ children }) {
         <Footer/>
         </body>
     </html>
+    </ReduxProvider>
   )
 }
