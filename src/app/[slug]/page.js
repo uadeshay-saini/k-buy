@@ -2,21 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPins, setPinStatus } from "@/provider/redux/pinSlice";
+import { fetchPins, setPinStatus, setPin } from "@/provider/redux/pinSlice";
 const slug = ({ params }) => {
-  const [pin, setPin] = useState([]);
+  // const [pin, setPin] = useState([]);
   const [effect, setEffect] = useState([]);
-
+ 
   const dispatch = useDispatch();
   const pinsJson = useSelector((state) => state.pin.pinsJson);
   const pinStatus = useSelector((state) => state.pin.pinStatus);
- 
+  const pin = useSelector((state) => state.pin.pin);
+
   const onPinChange = (e) => {
-    setPin(e.target.value);
+    // setPin(e.target.value);
+    dispatch(setPin(e.target.value));
+    console.log(pin)
+
   };
   const checkServiceability = async () => {
     try {
-       dispatch(fetchPins());
+      console.log(pinsJson);
+
+       await dispatch(fetchPins());
+       console.log(pinsJson);
        await setEffect("make it count baby!")
       // You can now access the updated pinStatus from the Redux store
       // const currentPinStatus = getState().pin.pinStatus;
@@ -26,6 +33,8 @@ const slug = ({ params }) => {
       console.error("Error checking serviceability:", error);
     }
   };
+      console.log(pinsJson);
+
   useEffect(() => {
     
     
@@ -35,7 +44,8 @@ const slug = ({ params }) => {
         //blank IF to remove error of showing cannot read properties of undefined in the below pinsjSON.includes  WHEN CLICKED AGAIN AFTER CHECKING A VALID PINCODE
       }else{
           if (pinsJson.includes(parseInt(pin))) {      // TO CHECK IF THE PIN ENTERED BY THE USER IS PRESENT IN THE DATABASE OR NOT
-          dispatch(setPinStatus(true));
+            console.log(pinsJson);
+            dispatch(setPinStatus(true));
          }else {
           dispatch(setPinStatus(false));
     }
@@ -47,6 +57,8 @@ const slug = ({ params }) => {
     // console.log("2if");
   }
 }, [checkServiceability])
+
+
   return (
     <div>
       main hu slug
