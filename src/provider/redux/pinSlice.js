@@ -5,7 +5,8 @@ import { useEffect } from 'react';
 export const fetchPins = createAsyncThunk('pin/fetchPins', async (_, thunkAPI) => {
      const response = await fetch("http://localhost:3000/api/pin");
   const pinsJson = await response.json();
-  // console.log(pinsJson)
+  await thunkAPI.dispatch(setPinsJson(pinsJson));
+  // console.log(state.pinsJson)
  
   return pinsJson;
 });
@@ -15,24 +16,32 @@ const pinSlice = createSlice({
   initialState: {
     pinStatus: null,
     loading: false,
-    pinsJson: [12222,12222], // Initialize pinsJson to null
+    pinsJson: [12222,12222],
+    pin: 12389, // Initialize pinsJson to null
 
   },
   reducers: {
     setPinStatus: (state, action) => {
       state.pinStatus = action.payload;
     },
+    setPinsJson: (state, action) => {
+      state.pinsJson = action.payload;
+    },
+    
+    setPin: (state, action) => {
+      state.pin = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPins.pending, (state, action) => {
-        state.pinsJson = action.payload;
+        // state.pinsJson = action.payload;
 
         state.loading = true;
       })
       .addCase(fetchPins.fulfilled, (state, action) => {
         state.loading = false;
-        state.pinsJson = action.payload;
+        // state.pinsJson = action.payload;
 
         state.pinStatus = true;
         // console.log(state.pinsJson)
@@ -46,5 +55,7 @@ const pinSlice = createSlice({
 });
 
 
-export const { setPinStatus } = pinSlice.actions;
+export const { setPinStatus, setPinsJson, setPin } = pinSlice.actions;
 export default pinSlice.reducer;
+
+

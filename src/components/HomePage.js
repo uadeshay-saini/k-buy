@@ -4,7 +4,10 @@ import Link from 'next/link';
 import Image from 'next/image'
 import { useDispatch, useSelector } from 'react-redux';
 import { ChangeColorToColor } from '@/provider/redux/ColorChange';
+import { usePathname } from 'next/navigation'
+
 const HomePage = () => {
+  const pathname = usePathname()
 
 
 
@@ -41,8 +44,9 @@ const dispatch  = useDispatch()
 
   return (
     <div>
-<input type='color' onChange={(e)=>dispatch(ChangeColorToColor(e.target.value))} name='' id=''></input>
-      {state}
+          {pathname !== '/'? <div></div> :
+
+
 <div className="relative m-10 shadow-md">
     <Link href={`${images[currentImage][1]}`}>
         {/* <a></a> */}
@@ -69,6 +73,7 @@ const dispatch  = useDispatch()
         </span>
     </button>
     </div>
+}
     </div>
   )
 }

@@ -1,10 +1,74 @@
 "use client";
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import Link from 'next/link'
 import { BsCart4 } from "react-icons/bs";
 import { IoMdClose } from "react-icons/io";
+import {logoutUser, checkIfUserLoggedIn} from "@/provider/redux/userSlice";
+import { useRouter, usePathname } from 'next/navigation'
+import { useDispatch, useSelector } from "react-redux";
+
+
 const NavBar = () => {
+  const router = useRouter()
+  const pathname = usePathname()
 const [profileOptions, setProfileOptions] = useState("hidden")
+const [showLogoutButton, setShowLogoutButton] = useState(false)
+const [showLoginRegisterButton, setShowLoginRegisterButton] = useState(true)
+const dispatch = useDispatch();
+
+
+useEffect( () => {
+  (async () => {
+      try {
+          const isUserLoggedIn = await dispatch(checkIfUserLoggedIn());
+          if(isUserLoggedIn.payload.statusCode <=  200){
+             if(isUserLoggedIn.payload.success){
+              setShowLogoutButton(isUserLoggedIn.payload.success) 
+              setShowLoginRegisterButton(false)
+             }
+             
+           }else if(isUserLoggedIn.payload.statusCode >  200){
+            if(!isUserLoggedIn.payload.success){
+              setShowLoginRegisterButton(true) 
+              setShowLogoutButton(false)
+            }
+            
+          }
+      } catch (error) {
+        console.error('Error:', error);
+        // Handle errors
+      }
+    })();
+       
+}, [pathname])
+const handleLogin = async () =>{
+  router.push('/login');
+
+
+}
+const handleRegister = async () =>{
+          router.push('/register');
+
+}
+const handleLogout = async () =>{
+  try {
+    const isUserLoggedIn = await dispatch(logoutUser());
+    if(isUserLoggedIn.payload.statusCode <=  200){
+       if(isUserLoggedIn.payload.success){
+        setShowLogoutButton(false) 
+        setShowLoginRegisterButton(true)
+
+        router.push('/login');
+
+       }
+       
+     }
+} catch (error) {
+  console.error('Error:', error);
+  // Handle errors
+}
+
+}
   const showProfileOptions = () =>{
     if(profileOptions===""){
       setProfileOptions("hidden")
@@ -16,7 +80,10 @@ const [profileOptions, setProfileOptions] = useState("hidden")
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+
   return (
+
     <div>
         
 
@@ -59,6 +126,20 @@ const [profileOptions, setProfileOptions] = useState("hidden")
     <p className="text-xs">My Bag</p>
     </div>
 
+ { showLoginRegisterButton && <button
+ onClick={handleLogin}
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
+    >Login</button>}
+
+     { showLoginRegisterButton && <button
+     onClick={handleRegister}
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
+    >SignUp</button>}
+
+     { showLogoutButton && <button
+     onClick={handleLogout}
+      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
+    >Logout</button>}
     <div onClick={showProfileOptions} className="h-10 w-10 hover:ring-4 user cursor-pointer relative ring-blue-700/30 rounded-full bg-cover bg-center bg-[url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80')]">
       
        <div className={`drop-down ${profileOptions} z-40 w-48 overflow-hidden bg-white rounded-md shadow absolute top-12 right-3`}>
