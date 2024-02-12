@@ -3,6 +3,7 @@ import { ChangeColor } from './ColorChange';
 import pinReducer, { fetchPins} from './pinSlice'
 import userReducer from './userSlice'
 import cartReducer from './cartSlice'
+import productReducer from './productSlice'
 
 // Export the store instance, not a function
 export const store = configureStore({
@@ -10,7 +11,8 @@ export const store = configureStore({
         'ChangeColor': ChangeColor.reducer,
         pin: pinReducer,
         user: userReducer,
-        cart: cartReducer
+        cart: cartReducer,
+        product: productReducer
 
     }
 });

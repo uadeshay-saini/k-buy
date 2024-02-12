@@ -3,10 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPins, setPinStatus, setPin } from "@/provider/redux/pinSlice";
+import { fetchSingleClothingProducts } from "@/provider/redux/productSlice";
+
 const slug = ({ params }) => {
   // const [pin, setPin] = useState([]);
   const [effect, setEffect] = useState([]);
- 
+
+  const [clothingProducts, setClothingProducts] = useState();
+  const [selectedColorObjects, setSelectedColorObjects] = useState();
+
   const dispatch = useDispatch();
   const pinsJson = useSelector((state) => state.pin.pinsJson);
   const pinStatus = useSelector((state) => state.pin.pinStatus);
@@ -15,126 +20,173 @@ const slug = ({ params }) => {
   const onPinChange = (e) => {
     // setPin(e.target.value);
     dispatch(setPin(e.target.value));
-    console.log(pin)
-
+    console.log(pin);
   };
   const checkServiceability = async () => {
     try {
       console.log(pinsJson);
 
-       await dispatch(fetchPins());
-       console.log(pinsJson);
-       await setEffect("make it count baby!")
+      await dispatch(fetchPins());
+      console.log(pinsJson);
+      await setEffect("make it count baby!");
       // You can now access the updated pinStatus from the Redux store
       // const currentPinStatus = getState().pin.pinStatus;
-     return
+      return;
     } catch (error) {
       // Handle errors
       console.error("Error checking serviceability:", error);
     }
   };
-      console.log(pinsJson);
+  console.log(pinsJson);
+
+  const handleColorButtonClick = (colorObject) => {
+    setSelectedColorObjects(colorObject);
+  };
 
   useEffect(() => {
-    
-    
-    if(pinStatus){  // TO CHECK THE STATUS OF THE LOADING WHETHER THE DATA IS LOADED FULLY IN pinSCLICE SLICE OF THE REDUX
+    (async () => {
+      try {
+        const fetchClothingProducts = await dispatch(
+          fetchSingleClothingProducts(params.slug)
+        );
+        if (fetchClothingProducts.payload.statusCode <= 200) {
+          if (fetchClothingProducts.payload.success) {
+            await setClothingProducts(
+              fetchClothingProducts.payload.data.productDetails
+            );
+            setSelectedColorObjects(
+              fetchClothingProducts.payload.data.productDetails
+                .colorQuantityImages[0]
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        // Handle errors
+      }
+    })();
+    if (pinStatus) {
+      // TO CHECK THE STATUS OF THE LOADING WHETHER THE DATA IS LOADED FULLY IN pinSCLICE SLICE OF THE REDUX
 
-      if(pinsJson === undefined){
+      if (pinsJson === undefined) {
         //blank IF to remove error of showing cannot read properties of undefined in the below pinsjSON.includes  WHEN CLICKED AGAIN AFTER CHECKING A VALID PINCODE
-      }else{
-          if (pinsJson.includes(parseInt(pin))) {      // TO CHECK IF THE PIN ENTERED BY THE USER IS PRESENT IN THE DATABASE OR NOT
-            console.log(pinsJson);
-            dispatch(setPinStatus(true));
-         }else {
+      } else {
+        if (pinsJson.includes(parseInt(pin))) {
+          // TO CHECK IF THE PIN ENTERED BY THE USER IS PRESENT IN THE DATABASE OR NOT
+          console.log(pinsJson);
+          dispatch(setPinStatus(true));
+        } else {
           dispatch(setPinStatus(false));
+        }
+      }
+      // console.log("1if")
     }
-  }
-    // console.log("1if")
-  }
-  if(pin===""){
-    dispatch(setPinStatus(null));
-    // console.log("2if");
-  }
-}, [checkServiceability])
-
+    if (pin === "") {
+      dispatch(setPinStatus(null));
+      // console.log("2if");
+    }
+  }, []);
 
   return (
-    <div>
-      main hu slug
-      <h2>{params.slug} </h2>
-      <h1 className="text-2xl mx-5 font-bold tracking-tight text-gray-900 sm:text-3xl">
-        Basic Tee 6-Pack
-      </h1>
-      <nav aria-label="Breadcrumb">
-        <ol
-          role="list"
-          className="mx-auto flex max-w-2xl items-center space-x-2 sm:px-6 lg:max-w-7xl lg:px-8"
-        >
-          <li>
-            <div className="flex items-center">
-              <a href="#" className="mr-2 text-sm font-medium text-gray-900">
-                Men
-              </a>
-              <svg
-                width="16"
-                height="20"
-                viewBox="0 0 16 20"
-                fill="currentColor"
-                aria-hidden="true"
-                className="h-5 w-4 text-gray-300"
-              >
-                <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
-              </svg>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <a href="#" className="mr-2 text-sm font-medium text-gray-900">
-                Clothing
-              </a>
-              <svg
-                width="16"
-                height="20"
-                viewBox="0 0 16 20"
-                fill="currentColor"
-                aria-hidden="true"
-                className="h-5 w-4 text-gray-300"
-              >
-                <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
-              </svg>
-            </div>
-          </li>
-
-          <li className="text-sm">
-            <a
-              href="#"
-              aria-current="page"
-              className="font-medium text-gray-500 hover:text-gray-600"
+    <>
+      {clothingProducts && selectedColorObjects && (
+        <div>
+          main hu slug
+          <h2>{params.slug} </h2>
+          <h1 className="text-2xl mx-5 font-bold tracking-tight text-gray-900 sm:text-3xl">
+            {/* Basic Tee 6-Pack */}
+            {clothingProducts.title}
+          </h1>
+          <nav aria-label="Breadcrumb">
+            <ol
+              role="list"
+              className="mx-auto flex max-w-2xl items-center space-x-2 sm:px-6 lg:max-w-7xl lg:px-8"
             >
-              Basic Tee 6-Pack
-            </a>
-          </li>
-        </ol>
-      </nav>
-      <div className="bg-white">
-        <div className="pt-6 md:flex lg:flex">
-          <div className=" sm:px-6   lg:gap-x-8 lg:px-8">
-            <div className="aspect-h-4 mx-5 mt-5 min-w-600  aspect-w-3  overflow-hidden rounded-lg lg:block">
-              <img
-                src="https://tailwindui.com/img/ecommerce-images/product-page-02-secondary-product-shot.jpg"
-                alt="Two each of gray, white, and black shirts laying flat."
-                className="h-full w-full object-cover object-center"
-              />
-            </div>
-            <div className="aspect-h-4 mx-5 mt-5 min-w-600  aspect-w-3  overflow-hidden rounded-lg lg:block">
-              <img
-                src="https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg"
-                alt="Front of men&#039;s Basic Tee in black."
-                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
-              />
-            </div>
-            {/* <div className="hidden lg:grid lg:grid-cols-1 lg:gap-y-8">
+              <li>
+                <div className="flex items-center">
+                  <a
+                    href="#"
+                    className="mr-2 text-sm font-medium text-gray-900"
+                  >
+                    {/* Men */}
+                    {clothingProducts.gender}
+                  </a>
+                  <svg
+                    width="16"
+                    height="20"
+                    viewBox="0 0 16 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-5 w-4 text-gray-300"
+                  >
+                    <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
+                  </svg>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <a
+                    href="#"
+                    className="mr-2 text-sm font-medium text-gray-900"
+                  >
+                    Clothing
+                  </a>
+                  <svg
+                    width="16"
+                    height="20"
+                    viewBox="0 0 16 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-5 w-4 text-gray-300"
+                  >
+                    <path d="M5.697 4.34L8.98 16.532h1.327L7.025 4.341H5.697z" />
+                  </svg>
+                </div>
+              </li>
+
+              <li className="text-sm">
+                <a
+                  href="#"
+                  aria-current="page"
+                  className="font-medium text-gray-500 hover:text-gray-600"
+                >
+                  {/* Basic Tee 6-Pack */}
+                  {clothingProducts.title}
+                </a>
+              </li>
+            </ol>
+          </nav>
+          <div className="bg-white">
+            <div className="pt-6 md:flex lg:flex">
+              <div className=" sm:px-6   lg:gap-x-8 lg:px-8">
+                {selectedColorObjects.colorSpecificImageUrls.map(
+                  (imageUrl, index) => (
+                    // <button key={index} onClick={() => handleColorButtonClick(colorObject)}>
+                    //   {colorObject.color}
+                    // </button>
+                    <div
+                      key={index}
+                      className="aspect-w-3 aspect-h-4 mx-5 mt-5 min-w-600 overflow-hidden rounded-lg lg:block"
+                      style={{ maxWidth: '300px', maxHeight: '400px' }}
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={clothingProducts.title}
+                        className="object-cover object-center w-full h-full"
+                        style={{ objectFit: 'cover' }}
+                        />
+                    </div>
+                  )
+                )}
+
+                <div className="aspect-h-4 mx-5 mt-5 min-w-600  aspect-w-3  overflow-hidden rounded-lg lg:block">
+                  <img
+                    src="https://tailwindui.com/img/ecommerce-images/product-page-01-related-product-01.jpg"
+                    alt="Front of men&#039;s Basic Tee in black."
+                    className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                  />
+                </div>
+                {/* <div className="hidden lg:grid lg:grid-cols-1 lg:gap-y-8">
         <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg">
           <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-tertiary-product-shot-01.jpg" alt="Model wearing plain black basic tee." className="h-full w-full object-cover object-center"/>
         </div>
@@ -145,129 +197,154 @@ const slug = ({ params }) => {
       <div className="aspect-h-5 aspect-w-4 lg:aspect-h-4 lg:aspect-w-3 sm:overflow-hidden sm:rounded-lg">
         <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-featured-product-shot.jpg" alt="Model wearing plain white basic tee." className="h-full w-full object-cover object-center"/>
       </div> */}
-          </div>
-          <div className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto,auto,1fr] lg:gap-x-8 lg:px-8 lg:pb-24 lg:pt-16">
-            <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-                Basic Tee 6-Pack
-              </h1>
-            </div>
-
-            {/* <!-- Options --> */}
-            <div className="mt-4 lg:row-span-3 lg:mt-0">
-              <h2 className="sr-only">Product information</h2>
-              <p className="text-3xl tracking-tight text-gray-900">$192</p>
-
-              {/* <!-- Reviews --> */}
-              <div className="mt-6">
-                <h3 className="sr-only">Reviews</h3>
-                <div className="flex items-center">
-                  <div className="flex items-center">
-                    {/* <!-- Active: "text-gray-900", Default: "text-gray-200" --> */}
-                    <svg
-                      className="text-gray-900 h-5 w-5 flex-shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      className="text-gray-900 h-5 w-5 flex-shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      className="text-gray-900 h-5 w-5 flex-shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      className="text-gray-900 h-5 w-5 flex-shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <svg
-                      className="text-gray-200 h-5 w-5 flex-shrink-0"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <p className="sr-only">4 out of 5 stars</p>
-                  <a
-                    href="#"
-                    className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                  >
-                    117 reviews
-                  </a>
-                </div>
               </div>
+              <div className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto,auto,1fr] lg:gap-x-8 lg:px-8 lg:pb-24 lg:pt-16">
+                <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
+                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                    {/* Basic Tee 6-Pack */}
+                    {clothingProducts.title}
+                  </h1>
+                </div>
 
-              <form className="mt-10">
-                {/* <!-- Colors --> */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">Color</h3>
+                {/* <!-- Options --> */}
+                <div className="mt-4 lg:row-span-3 lg:mt-0">
+                  <h2 className="sr-only">Product information</h2>
+                  <p className="text-3xl tracking-tight text-gray-900">
+                    ${clothingProducts.price}
+                  </p>
 
-                  <fieldset className="mt-4">
-                    <legend className="sr-only">Choose a color</legend>
-                    <div className="flex items-center space-x-3">
-                      {/* <!--
-                  Active and Checked: "ring ring-offset-1"
-                  Not Active and Checked: "ring-2"
-                --> */}
-                      <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-400">
-                        <input
-                          type="radio"
-                          name="color-choice"
-                          value="White"
-                          className="sr-only"
-                          aria-labelledby="color-choice-0-label"
-                        />
-                        <span id="color-choice-0-label" className="sr-only">
-                          White
-                        </span>
-                        <span
+                  {/* <!-- Reviews --> */}
+                  <div className="mt-6">
+                    <h3 className="sr-only">Reviews</h3>
+                    <div className="flex items-center">
+                      <div className="flex items-center">
+                        {/* <!-- Active: "text-gray-900", Default: "text-gray-200" --> */}
+                        <svg
+                          className="text-gray-900 h-5 w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
                           aria-hidden="true"
-                          className="h-8 w-8 bg-white rounded-full border border-black border-opacity-10"
-                        ></span>
-                      </label>
-                      {/* <!--
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <svg
+                          className="text-gray-900 h-5 w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <svg
+                          className="text-gray-900 h-5 w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <svg
+                          className="text-gray-900 h-5 w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <svg
+                          className="text-gray-200 h-5 w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                      <p className="sr-only">4 out of 5 stars</p>
+                      <a
+                        href="#"
+                        className="ml-3 text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                      >
+                        117 reviews
+                      </a>
+                    </div>
+                  </div>
+
+                  <form className="mt-10">
+                    {/* <!-- Colors --> */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        Color
+                      </h3>
+
+                      <fieldset className="mt-4">
+                        <legend className="sr-only">Choose a color</legend>
+                        <div className="flex items-center space-x-3">
+                          {/* <!--    
                   Active and Checked: "ring ring-offset-1"
                   Not Active and Checked: "ring-2"
                 --> */}
-                      <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-400">
+
+                          {clothingProducts.colorQuantityImages.map(
+                            (colorObject, index) => (
+                              // <button key={index} onClick={() => handleColorButtonClick(colorObject)}>
+                              //   {colorObject.color}
+                              // </button>
+                              <label
+                                key={index}
+                                className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-400"
+                              >
+                                <input
+                                  type="radio"
+                                  name="color-choice"
+                                  value="White"
+                                  className="sr-only"
+                                  aria-labelledby="color-choice-0-label"
+                                  onClick={() =>
+                                    handleColorButtonClick(colorObject)
+                                  }
+                                />
+                                <span
+                                  id="color-choice-0-label"
+                                  className="sr-only"
+                                >
+                                  {colorObject.color}
+                                </span>
+                                <span
+                                  aria-hidden="true"
+                                  className="h-8 w-8 bg-white rounded-full border border-black border-opacity-10"
+                                >
+                                  {colorObject.color}
+                                </span>
+                              </label>
+                            )
+                          )}
+
+                          {/* <!--
+                  Active and Checked: "ring ring-offset-1"
+                  Not Active and Checked: "ring-2"
+                --> */}
+                          {/* <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-400">
                         <input
                           type="radio"
                           name="color-choice"
@@ -282,12 +359,12 @@ const slug = ({ params }) => {
                           aria-hidden="true"
                           className="h-8 w-8 bg-gray-200 rounded-full border border-black border-opacity-10"
                         ></span>
-                      </label>
-                      {/* <!--
+                      </label> */}
+                          {/* <!--
                   Active and Checked: "ring ring-offset-1"
                   Not Active and Checked: "ring-2"
                 --> */}
-                      <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-900">
+                          {/* <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-900">
                         <input
                           type="radio"
                           name="color-choice"
@@ -302,294 +379,198 @@ const slug = ({ params }) => {
                           aria-hidden="true"
                           className="h-8 w-8 bg-gray-900 rounded-full border border-black border-opacity-10"
                         ></span>
-                      </label>
+                      </label> */}
+                        </div>
+                      </fieldset>
                     </div>
-                  </fieldset>
-                </div>
 
-                {/* <!-- Sizes --> */}
-                <div className="mt-10">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900">Size</h3>
-                    <a
-                      href="#"
-                      className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                    >
-                      Size guide
-                    </a>
-                  </div>
-
-                  <fieldset className="mt-4">
-                    <legend className="sr-only">Choose a size</legend>
-                    <div className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4">
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-not-allowed bg-gray-50 text-gray-200">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="XXS"
-                          disabled
-                          className="sr-only"
-                          aria-labelledby="size-choice-0-label"
-                        />
-                        <span id="size-choice-0-label">XXS</span>
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
+                    {/* <!-- Sizes --> */}
+                    <div className="mt-10">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-900">
+                          Size
+                        </h3>
+                        <a
+                          href="#"
+                          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                         >
-                          <svg
-                            className="absolute inset-0 h-full w-full stroke-2 text-gray-200"
-                            viewBox="0 0 100 100"
-                            preserveAspectRatio="none"
-                            stroke="currentColor"
+                          Size guide
+                        </a>
+                      </div>
+
+     
+                      <fieldset className="mt-4">
+                        <legend className="sr-only">Choose a size</legend>
+                        <div className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4">
+                          {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
+                          {
+                            Object.entries(selectedColorObjects.sizeQuantity[0]).map(([key, value]) => (
+                              <div key={key}>
+                                
+                                {value<=0? (<label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-not-allowed bg-gray-50 text-gray-200">
+                          <input
+                            type="radio"
+                            name="size-choice"
+                            value="XXS"
+                            disabled
+                            className="sr-only"
+                            aria-labelledby="size-choice-0-label"
+                          />
+                          <span id="size-choice-0-label">{key} {value}</span>
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
                           >
-                            <line
-                              x1="0"
-                              y1="100"
-                              x2="100"
-                              y2="0"
-                              vectorEffect="non-scaling-stroke"
+                            <svg
+                              className="absolute inset-0 h-full w-full stroke-2 text-gray-200"
+                              viewBox="0 0 100 100"
+                              preserveAspectRatio="none"
+                              stroke="currentColor"
+                            >
+                              <line
+                                x1="0"
+                                y1="100"
+                                x2="100"
+                                y2="0"
+                                vectorEffect="non-scaling-stroke"
+                              />
+                            </svg>
+                          </span>
+                        </label>)
+                        :
+                        (<label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
+                            <input
+                              type="radio"
+                              name="size-choice"
+                              value="2XL"
+                              className="sr-only"
+                              aria-labelledby="size-choice-6-label"
                             />
-                          </svg>
-                        </span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="XS"
-                          className="sr-only"
-                          aria-labelledby="size-choice-1-label"
-                        />
-                        <span id="size-choice-1-label">XS</span>
-                        {/* <!--
+                            <span id="size-choice-6-label">{key}</span>
+                            {/* <!--
                     Active: "border", Not Active: "border-2"
                     Checked: "border-indigo-500", Not Checked: "border-transparent"
                   --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="S"
-                          className="sr-only"
-                          aria-labelledby="size-choice-2-label"
-                        />
-                        <span id="size-choice-2-label">S</span>
-                        {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="M"
-                          className="sr-only"
-                          aria-labelledby="size-choice-3-label"
-                        />
-                        <span id="size-choice-3-label">M</span>
-                        {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="L"
-                          className="sr-only"
-                          aria-labelledby="size-choice-4-label"
-                        />
-                        <span id="size-choice-4-label">L</span>
-                        {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="XL"
-                          className="sr-only"
-                          aria-labelledby="size-choice-5-label"
-                        />
-                        {/* <span id="size-choice-5-label">XL</span>
-                  <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="2XL"
-                          className="sr-only"
-                          aria-labelledby="size-choice-6-label"
-                        />
-                        <span id="size-choice-6-label">2XL</span>
-                        {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
-                      {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                      <label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value="3XL"
-                          className="sr-only"
-                          aria-labelledby="size-choice-7-label"
-                        />
-                        <span id="size-choice-7-label">3XL</span>
-                        {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                        <span
-                          className="pointer-events-none absolute -inset-px rounded-md"
-                          aria-hidden="true"
-                        ></span>
-                      </label>
+                            <span
+                              className="pointer-events-none absolute -inset-px rounded-md"
+                              aria-hidden="true"
+                            ></span>
+                          </label>)}
+                              </div>
+                            ))}
+                        </div>
+                      </fieldset>
                     </div>
-                  </fieldset>
+
+                    <button
+                      type="submit"
+                      className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                      Add to bag
+                    </button>
+                  </form>
                 </div>
 
-                <button
-                  type="submit"
-                  className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                  Add to bag
-                </button>
-              </form>
-            </div>
+                <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pb-16 lg:pr-8 lg:pt-6">
+                  {/* <!-- Description and details --> */}
+                  <div>
+                    <h3 className="sr-only">Description</h3>
 
-            <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pb-16 lg:pr-8 lg:pt-6">
-              {/* <!-- Description and details --> */}
-              <div>
-                <h3 className="sr-only">Description</h3>
-
-                <div className="space-y-6">
-                  <p className="text-base text-gray-900">
-                    The Basic Tee 6-Pack allows you to fully express your
+                    <div className="space-y-6">
+                      <p className="text-base text-gray-900">
+                        {/* The Basic Tee 6-Pack allows you to fully express your
                     vibrant personality with three grayscale options. Feeling
                     adventurous? Put on a heather gray tee. Want to be a
                     trendsetter? Try our exclusive colorway: &quot;Black&quot;.
                     Need to add an extra pop of color to your outfit? Our white
-                    tee has you covered.
-                  </p>
-                </div>
-              </div>
+                    tee has you covered. */}
+                        {clothingProducts.description}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="mt-10">
-                <h3 className="text-sm font-medium text-gray-900">
-                  Highlights
-                </h3>
+                  <div className="mt-10">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      Highlights
+                    </h3>
 
-                <div className="mt-4">
-                  <ul role="list" className="list-disc space-y-2 pl-4 text-sm">
-                    <li className="text-gray-400">
-                      <span className="text-gray-600">
-                        Hand cut and sewn locally
-                      </span>
-                    </li>
-                    <li className="text-gray-400">
-                      <span className="text-gray-600">
-                        Dyed with our proprietary colors
-                      </span>
-                    </li>
-                    <li className="text-gray-400">
-                      <span className="text-gray-600">
-                        Pre-washed &amp; pre-shrunk
-                      </span>
-                    </li>
-                    <li className="text-gray-400">
-                      <span className="text-gray-600">
-                        Ultra-soft 100% cotton
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+                    <div className="mt-4">
+                      <ul
+                        role="list"
+                        className="list-disc space-y-2 pl-4 text-sm"
+                      >
+                        <li className="text-gray-400">
+                          <span className="text-gray-600">
+                            Hand cut and sewn locally
+                          </span>
+                        </li>
+                        <li className="text-gray-400">
+                          <span className="text-gray-600">
+                            Dyed with our proprietary colors
+                          </span>
+                        </li>
+                        <li className="text-gray-400">
+                          <span className="text-gray-600">
+                            Pre-washed &amp; pre-shrunk
+                          </span>
+                        </li>
+                        <li className="text-gray-400">
+                          <span className="text-gray-600">
+                            Ultra-soft 100% cotton
+                          </span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
 
-              <div className="mt-10">
-                <h2 className="text-sm font-medium text-gray-900">Details</h2>
+                  <div className="mt-10">
+                    <h2 className="text-sm font-medium text-gray-900">
+                      Details
+                    </h2>
 
-                <div className="mt-4 space-y-6">
-                  <p className="text-sm text-gray-600">
-                    The 6-Pack includes two black, two white, and two heather
+                    <div className="mt-4 space-y-6">
+                      <p className="text-sm text-gray-600">
+                        {/* The 6-Pack includes two black, two white, and two heather
                     gray Basic Tees. Sign up for our subscription service and be
                     the first to get new, exciting colors, like our upcoming
-                    &quot;Charcoal Gray&quot; limited release.
-                  </p>
-                </div>
-                <div className="flex mt-10">
-                  <input
-                    onChange={onPinChange}
-                    // value={pin}
-                    type="text"
-                    placeholder="Enter Your Pincode"
-                    className=" border border-gray-300 p-2 mr-3 rounded-md focus:outline-none focus:border-blue-500"
-                  ></input>
-                  <button
-                    onClick={checkServiceability}
-                    type="submit"
-                    className=" flex  items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                  >
-                    Check Serviceability
-                  </button>
-                </div>
-                {!pinStatus && pinStatus != null && (
-                  <div className="text-red-600 mt-3">
-                    Sorry We currently do not deliver to this pincode{" "}
+                    &quot;Charcoal Gray&quot; limited release. */}
+                        {clothingProducts.fullDescription}
+                      </p>
+                    </div>
+                    <div className="flex mt-10">
+                      <input
+                        onChange={onPinChange}
+                        // value={pin}
+                        type="text"
+                        placeholder="Enter Your Pincode"
+                        className=" border border-gray-300 p-2 mr-3 rounded-md focus:outline-none focus:border-blue-500"
+                      ></input>
+                      <button
+                        onClick={checkServiceability}
+                        type="submit"
+                        className=" flex  items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      >
+                        Check Serviceability
+                      </button>
+                    </div>
+                    {!pinStatus && pinStatus != null && (
+                      <div className="text-red-600 mt-3">
+                        Sorry We currently do not deliver to this pincode{" "}
+                      </div>
+                    )}
+                    {pinStatus && pinStatus != null && (
+                      <div className="text-green-600 mt-3">
+                        Congrats this pin code is serviceable{" "}
+                      </div>
+                    )}
                   </div>
-                )}
-                {pinStatus && pinStatus != null && (
-                  <div className="text-green-600 mt-3">
-                    Congrats this pin code is serviceable{" "}
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
