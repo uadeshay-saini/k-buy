@@ -31,20 +31,9 @@ const initialState = {
     },
   };
   
-// Async thunk for fetching pins
-// export const fetchPins = createAsyncThunk('pin/fetchPins', async (_, thunkAPI) => {
-//   try {
-//     const response = await fetch("http://localhost:8000/api/v1/users/register")
-//     const registerJson = await response.json();
 
-//     thunkAPI.dispatch(setPinsJson(pinsJson));
 
-//     return pinsJson;
-//   } catch (error) {
-//     console.error("Error fetching pins:", error);
-//     throw error;
-//   }
-// });
+
 
 
 export const fetchSingleClothingProducts = createAsyncThunk('cart/fetchSingleClothingProducts', async (productId, thunkAPI) => {
@@ -102,6 +91,118 @@ export const fetchAllClothingProducts = createAsyncThunk('cart/fetchAllClothingP
   }
 
   })
+
+  export const fetchSingleElectronicsProducts = createAsyncThunk('cart/fetchSingleElectronicsProducts', async (productId, thunkAPI) => {
+ 
+
+    try {
+      
+    console.log("cart");
+      const response = await fetch(`http://localhost:8000/api/v1/products/electronics/fetchsingleelectronicsproduct`, {
+        method: 'POST',
+    credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify({_id: productId}),
+      });
+      
+      const fetchedClothingProducts = await response.json();
+      console.log(fetchedClothingProducts);
+        return fetchedClothingProducts;
+    } catch (error) {
+      console.log("error occurredwhile registering user");
+    }
+    
+    })
+    
+    
+    export const fetchAllElectronicsProducts = createAsyncThunk('cart/fetchAllElectronicsProducts', async (_, thunkAPI) => {
+     
+    
+        const state = thunkAPI.getState();
+      const cart = state.cart; // Accessing the cart state
+    
+      console.log(cart);
+    //   const state = thunkAPI.getState();
+    //   const cart = state.cart;
+      console.log(cart)
+      try {
+        
+      console.log("cart");
+        const response = await fetch(`http://localhost:8000/api/v1/products/electronics/fetchallelectronicsproducts?page=3`, {
+          method: 'POST',
+      credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json', 
+          },
+          body: JSON.stringify({}),
+        });
+        
+        const fetchedClothingProducts = await response.json();
+        console.log(fetchedClothingProducts);
+          return fetchedClothingProducts;
+      } catch (error) {
+        console.log("error occurredwhile registering user");
+      }
+    
+      })
+
+      export const fetchSingleMiscProducts = createAsyncThunk('cart/fetchSingleMiscProducts', async (productId, thunkAPI) => {
+ 
+
+        try {
+          
+        console.log("cart");
+          const response = await fetch(`http://localhost:8000/api/v1/products/misc/fetchsinglemiscproduct`, {
+            method: 'POST',
+        credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json', 
+            },
+            body: JSON.stringify({_id: productId}),
+          });
+          
+          const fetchedClothingProducts = await response.json();
+          console.log(fetchedClothingProducts);
+            return fetchedClothingProducts;
+        } catch (error) {
+          console.log("error occurredwhile registering user");
+        }
+        
+        })
+        
+        
+        export const fetchAllMiscProducts = createAsyncThunk('cart/fetchAllMiscProducts', async (_, thunkAPI) => {
+         
+        
+            const state = thunkAPI.getState();
+          const cart = state.cart; // Accessing the cart state
+        
+          console.log(cart);
+        //   const state = thunkAPI.getState();
+        //   const cart = state.cart;
+          console.log(cart)
+          try {
+            
+          console.log("cart");
+            const response = await fetch(`http://localhost:8000/api/v1/products/misc/fetchallmiscproducts?page=3`, {
+              method: 'POST',
+          credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json', 
+              },
+              body: JSON.stringify({}),
+            });
+            
+            const fetchedClothingProducts = await response.json();
+            console.log(fetchedClothingProducts);
+              return fetchedClothingProducts;
+          } catch (error) {
+            console.log("error occurredwhile registering user");
+          }
+        
+          })
 
 
 //accessthe states in this state and do some research and do add the states 

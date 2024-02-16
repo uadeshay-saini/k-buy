@@ -3,9 +3,18 @@ import React, {useState, useEffect} from 'react'
 import Link from 'next/link'
 import { BsCart4 } from "react-icons/bs";
 import { IoMdClose } from "react-icons/io";
+import { BsCart3 } from "react-icons/bs";
+import { LuLogIn } from "react-icons/lu";
+import { LuLogOut } from "react-icons/lu";
+import { GiArchiveRegister } from "react-icons/gi";
+
+
+
 import {logoutUser, checkIfUserLoggedIn} from "@/provider/redux/userSlice";
 import { useRouter, usePathname } from 'next/navigation'
 import { useDispatch, useSelector } from "react-redux";
+import { fetchCart, deleteProductsToCart } from "@/provider/redux/cartSlice";
+import { fetchSingleClothingProducts, fetchSingleElectronicsProducts, fetchSingleMiscProducts } from "@/provider/redux/productSlice";
 
 
 const NavBar = () => {
@@ -82,6 +91,131 @@ const handleLogout = async () =>{
   };
 
 
+  ///////////////////////////////
+  const [clothingCart, setClothingCart] = useState()
+  const [electronicsCart, setElectronicsCart] = useState()
+  const [miscCart, setMiscCart] = useState()
+  const [userNOTLoggedIn, setUserNOTLoggedIn] = useState()
+
+  const handleClothingDeleteToCart = async (cartObject) => {
+    let cartParam = {
+      clothing: [
+        {
+          _Id_OfProduct: cartObject._Id_OfProduct,
+          color: cartObject.color,
+          size: cartObject.size,
+        },
+      ],
+    }
+    const deleteClothingProductsToCart = await dispatch(
+      deleteProductsToCart(cartParam)
+    );
+    console.log(deleteClothingProductsToCart)
+  };
+
+  const handleElectronicsMiscDeleteToCart = async (cartObject, productType) => {
+    let cartParam = {
+      [productType]: [
+        {
+          _Id_OfProduct: cartObject._Id_OfProduct,
+          // color: colorForCart
+          // baad me jb electronics or misc ke schema me color ko add kre jb un comment krdio
+        },
+      ],
+    }
+    const deleteElectronicsMiscProductsToCart = await dispatch(
+      deleteProductsToCart(cartParam)
+    );
+    console.log(deleteElectronicsMiscProductsToCart)
+  };
+
+  useEffect(() => {
+    (async ()=>{
+      const productsPresentInTheCart = await dispatch(fetchCart())
+      console.log(productsPresentInTheCart)
+        // Loop through each product in the array
+        if(!(productsPresentInTheCart.payload === undefined)){
+        for (const product of productsPresentInTheCart.payload.data.foundCart.productsAdded.clothing) {
+          const productId = product._Id_OfProduct;
+      
+          // Make a fetch request for the product details using its ID
+          const productDetails = await dispatch(fetchSingleClothingProducts(productId));
+
+          for (const color of productDetails.payload.data.productDetails.colorQuantityImages) {
+             if (color.color === product.color ){
+              product.colorSpecificImageUrls = color.colorSpecificImageUrls;
+
+             }
+          }
+          // Store the fetched details back in the original object
+          product.title = productDetails.payload.data.productDetails.title;
+          product.description = productDetails.payload.data.productDetails.description;
+          product.price = productDetails.payload.data.productDetails.price;
+          product.brand = productDetails.payload.data.productDetails.brand;
+
+
+
+        }
+        setClothingCart(productsPresentInTheCart.payload.data.foundCart.productsAdded.clothing)
+
+        for (const product of productsPresentInTheCart.payload.data.foundCart.productsAdded.electronics) {
+          const productId = product._Id_OfProduct;
+      
+          // Make a fetch request for the product details using its ID
+          const productDetails = await dispatch(fetchSingleElectronicsProducts(productId));
+
+          // for (const color of productDetails.payload.data.productDetails.colorQuantityImages) {
+          //    if (color.color === product.color ){
+          //     product.colorSpecificImageUrls = color.colorSpecificImageUrls;
+
+          //    }
+          // }
+
+          product.colorSpecificImageUrls = productDetails.payload.data.productDetails.colorQuantityImages[0].colorSpecificImageUrls;
+
+          // Store the fetched details back in the original object
+          product.title = productDetails.payload.data.productDetails.title;
+          product.description = productDetails.payload.data.productDetails.description;
+          product.price = productDetails.payload.data.productDetails.price;
+          product.brand = productDetails.payload.data.productDetails.brand;
+
+
+        }
+        setElectronicsCart(productsPresentInTheCart.payload.data.foundCart.productsAdded.electronics)
+
+        for (const product of productsPresentInTheCart.payload.data.foundCart.productsAdded.misc) {
+          const productId = product._Id_OfProduct;
+      
+          // Make a fetch request for the product details using its ID
+          const productDetails = await dispatch(fetchSingleMiscProducts(productId));
+
+          // for (const color of productDetails.payload.data.productDetails.colorQuantityImages) {
+          //    if (color.color === product.color ){
+          //     product.colorSpecificImageUrls = color.colorSpecificImageUrls;
+
+          //    }
+          // }
+
+          product.colorSpecificImageUrls = productDetails.payload.data.productDetails.colorQuantityImages[0].colorSpecificImageUrls;
+
+
+          // Store the fetched details back in the original object
+          product.title = productDetails.payload.data.productDetails.title;
+          product.description = productDetails.payload.data.productDetails.description;
+          product.price = productDetails.payload.data.productDetails.price;
+          product.brand = productDetails.payload.data.productDetails.brand;
+
+
+        }
+        setMiscCart(productsPresentInTheCart.payload.data.foundCart.productsAdded.misc)
+
+        // Now, the original array contains the fetched details for each product
+        console.log(productsPresentInTheCart);
+    }else if((productsPresentInTheCart.payload === undefined)){
+      setUserNOTLoggedIn(true)
+    }
+  })()
+}, [])
   return (
 
     <div>
@@ -89,7 +223,7 @@ const handleLogout = async () =>{
 
 
 <nav className="flex dark:bg-slate-900 items-center relative justify-between bg-white px-5 py-6 w-full">
-  <div>
+ <Link href="/"> <div>
     <svg width="41" height="39" viewBox="0 0 41 39" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path className="dark:fill-white" d="M8.63077 14.8549C8.82584 14.8549 9.01902 14.8165 9.19926 14.7418C9.37949 14.6672 9.54324 14.5578 9.68119 14.4198C9.81914 14.2819 9.92858 14.1182 10.0032 13.9379C10.0779 13.7577 10.1163 13.5645 10.1163 13.3695C10.1163 10.6116 11.2119 7.9667 13.162 6.0166C15.112 4.0665 17.757 2.97094 20.5148 2.97094C23.2727 2.97094 25.9176 4.0665 27.8677 6.0166C29.8178 7.9667 30.9134 10.6116 30.9134 13.3695C30.9172 13.7609 31.0754 14.1349 31.3537 14.4103C31.6317 14.6857 32.0074 14.8402 32.3989 14.8402C32.7903 14.8402 33.1659 14.6857 33.444 14.4103C33.7222 14.1349 33.8804 13.7609 33.8843 13.3695C33.8843 11.6138 33.5385 9.87525 32.8666 8.25319C32.1947 6.63113 31.21 5.15729 29.9685 3.91582C28.7269 2.67435 27.2531 1.68956 25.6311 1.01769C24.009 0.345811 22.2706 0 20.5148 0C18.7591 0 17.0207 0.345811 15.3985 1.01769C13.7765 1.68956 12.3027 2.67435 11.0612 3.91582C9.81972 5.15729 8.83494 6.63113 8.16305 8.25319C7.49118 9.87525 7.14537 11.6138 7.14537 13.3695C7.14537 13.7634 7.30187 14.1412 7.58043 14.4198C7.859 14.6984 8.23682 14.8549 8.63077 14.8549Z" fill="#1A1E2C" />
       <path className="dark:fill-white" d="M39.5293 17.8258H26.452C27.4202 16.5421 27.9432 14.9775 27.9415 13.3695C27.9415 11.3996 27.1589 9.51035 25.7661 8.11742C24.3731 6.72449 22.4838 5.94196 20.5139 5.94196C18.5442 5.94196 16.655 6.72449 15.262 8.11742C13.869 9.51035 13.0865 11.3996 13.0865 13.3695C13.0865 13.7635 13.243 14.1413 13.5216 14.4199C13.8002 14.6985 14.1781 14.855 14.5721 14.855C14.9661 14.855 15.344 14.6985 15.6225 14.4199C15.9011 14.1413 16.0576 13.7635 16.0576 13.3695C16.0576 12.488 16.3189 11.6264 16.8086 10.8935C17.2983 10.1606 17.9943 9.58942 18.8086 9.25209C19.6229 8.91477 20.519 8.8265 21.3834 8.99844C22.2479 9.17038 23.0421 9.59481 23.6652 10.218C24.2885 10.8413 24.713 11.6354 24.885 12.4998C25.0569 13.3643 24.9687 14.2604 24.6314 15.0746C24.294 15.889 23.7229 16.5851 22.99 17.0748C22.2571 17.5645 21.3955 17.8258 20.5141 17.8258H1.50039C1.30407 17.8239 1.1093 17.8608 0.927353 17.9347C0.745405 18.0084 0.579889 18.1175 0.440367 18.2556C0.300847 18.3938 0.190089 18.5581 0.114504 18.7393C0.0389171 18.9206 0 19.115 0 19.3113C0 19.5075 0.0389171 19.702 0.114504 19.8832C0.190089 20.0644 0.300847 20.2287 0.440367 20.367C0.579889 20.505 0.745405 20.6142 0.927353 20.6879C1.1093 20.7617 1.30407 20.7987 1.50039 20.7967H39.5293C39.9207 20.7929 40.2947 20.6346 40.5701 20.3564C40.8455 20.0784 41 19.7027 41 19.3113C41 18.9198 40.8455 18.5442 40.5701 18.2661C40.2947 17.9879 39.9207 17.8297 39.5293 17.8258Z" fill="#0346F2" />
@@ -97,6 +231,7 @@ const handleLogout = async () =>{
       <path className="dark:fill-white" d="M1.47071 20.971H14.548C13.5798 22.2547 13.0568 23.8193 13.0585 25.4274C13.0585 27.3973 13.8411 29.2865 15.2339 30.6794C16.6269 32.0723 18.5162 32.8549 20.4861 32.8549C22.4558 32.8549 24.345 32.0723 25.738 30.6794C27.131 29.2865 27.9135 27.3973 27.9135 25.4274C27.9135 25.0334 27.757 24.6555 27.4784 24.3769C27.1998 24.0983 26.8219 23.9418 26.4279 23.9418C26.0339 23.9418 25.656 24.0983 25.3775 24.3769C25.0989 24.6555 24.9424 25.0334 24.9424 25.4274C24.9424 26.3088 24.6811 27.1704 24.1914 27.9033C23.7017 28.6362 23.0057 29.2074 22.1914 29.5447C21.3771 29.882 20.481 29.9703 19.6166 29.7984C18.7521 29.6264 17.9579 29.202 17.3348 28.5788C16.7115 27.9555 16.287 27.1615 16.115 26.297C15.9431 25.4325 16.0313 24.5364 16.3686 23.7222C16.706 22.9078 17.2771 22.2117 18.01 21.722C18.7429 21.2323 19.6045 20.971 20.4859 20.971H39.4996C39.6959 20.9729 39.8907 20.936 40.0726 20.8622C40.2546 20.7885 40.4201 20.6793 40.5596 20.5412C40.6992 20.403 40.8099 20.2387 40.8855 20.0575C40.9611 19.8762 41 19.6818 41 19.4855C41 19.2893 40.9611 19.0948 40.8855 18.9136C40.8099 18.7324 40.6992 18.5681 40.5596 18.4299C40.4201 18.2918 40.2546 18.1826 40.0726 18.1089C39.8907 18.0351 39.6959 17.9981 39.4996 18.0001H1.47071C1.07935 18.0039 0.705326 18.1622 0.429928 18.4404C0.15453 18.7184 0 19.0941 0 19.4855C0 19.877 0.15453 20.2526 0.429928 20.5307C0.705326 20.8089 1.07935 20.9672 1.47071 20.971Z" fill="#0346F2" />
     </svg>
   </div>
+  </Link>
   <ul id="drawer" role="menu" className="sm:gap-3 transition-left ease-[cubic-bezier(0.4, 0.0, 0.2, 1)] delay-150  sm:flex  flex flex-col cursor-pointer absolute min-h-screen -left-48 sm:static w-48 top-0 bg-white sm:shadow-none shadow-xl sm:bg-transparent sm:flex-row sm:w-auto sm:min-h-0 dark:bg-slate-900  ">
     <div className="sm:hidden p-6 mb-5 flex items-center justify-center">
       <svg width="41" height="39" viewBox="0 0 41 39" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -106,42 +241,77 @@ const handleLogout = async () =>{
         <path d="M1.47071 20.971H14.548C13.5798 22.2547 13.0568 23.8193 13.0585 25.4274C13.0585 27.3973 13.8411 29.2865 15.2339 30.6794C16.6269 32.0723 18.5162 32.8549 20.4861 32.8549C22.4558 32.8549 24.345 32.0723 25.738 30.6794C27.131 29.2865 27.9135 27.3973 27.9135 25.4274C27.9135 25.0334 27.757 24.6555 27.4784 24.3769C27.1998 24.0983 26.8219 23.9418 26.4279 23.9418C26.0339 23.9418 25.656 24.0983 25.3775 24.3769C25.0989 24.6555 24.9424 25.0334 24.9424 25.4274C24.9424 26.3088 24.6811 27.1704 24.1914 27.9033C23.7017 28.6362 23.0057 29.2074 22.1914 29.5447C21.3771 29.882 20.481 29.9703 19.6166 29.7984C18.7521 29.6264 17.9579 29.202 17.3348 28.5788C16.7115 27.9555 16.287 27.1615 16.115 26.297C15.9431 25.4325 16.0313 24.5364 16.3686 23.7222C16.706 22.9078 17.2771 22.2117 18.01 21.722C18.7429 21.2323 19.6045 20.971 20.4859 20.971H39.4996C39.6959 20.9729 39.8907 20.936 40.0726 20.8622C40.2546 20.7885 40.4201 20.6793 40.5596 20.5412C40.6992 20.403 40.8099 20.2387 40.8855 20.0575C40.9611 19.8762 41 19.6818 41 19.4855C41 19.2893 40.9611 19.0948 40.8855 18.9136C40.8099 18.7324 40.6992 18.5681 40.5596 18.4299C40.4201 18.2918 40.2546 18.1826 40.0726 18.1089C39.8907 18.0351 39.6959 17.9981 39.4996 18.0001H1.47071C1.07935 18.0039 0.705326 18.1622 0.429928 18.4404C0.15453 18.7184 0 19.0941 0 19.4855C0 19.877 0.15453 20.2526 0.429928 20.5307C0.705326 20.8089 1.07935 20.9672 1.47071 20.971Z" fill="#0346F2" />
       </svg>
     </div>
-    <li className="font-medium text-sm p-3 hover:bg-slate-300 dark:hover:bg-slate-800 sm:p-0 sm:hover:bg-transparent text-primary">
-      <a href="#" className="dark:text-white">Men</a>
+    <li className="dark:text-white font-medium text-sm p-3 hover:bg-slate-300 dark:hover:bg-slate-800 sm:p-0 sm:hover:bg-transparent text-primary">
+      <Link href="/clothing" >Clothing</Link>
     </li>
     <li className="font-medium text-sm p-3 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 sm:p-0 sm:hover:bg-transparent text-gray-600 hover:text-primary transition-colors">
-      <a href="#" className="dark:text-white">Women</a>
+      <Link href="/electronics" className="dark:text-white">Electronics</Link>
     </li>
     <li className="font-medium text-sm p-3 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 sm:p-0 sm:hover:bg-transparent text-gray-600 hover:text-primary transition-colors">
-      <a href="#" className="dark:text-white">Kids</a>
+      <Link href="/misc" className="dark:text-white">Others</Link>
     </li>
   </ul>
-  <div className="flex gap-3 items-center">
+
+
+
+  <div className="flex gap-3 items-center relative">
+
+  <button onClick={toggleSidebar}>
+    <div onClick={toggleSidebar} className='flex pt-2 flex-col items-center relative'>
+    <BsCart3/>
+    <p className="text-xs">My Cart</p>
+    </div>
+    
+  </button>
+</div>
+
+  <div className="flex gap-3 items-center relative">
 
 {/* this is cart svg */}
-    <div onClick={toggleSidebar} className='flex mt-2 flex-col items-center'>
+
+
+    <button onClick={toggleSidebar}>
+    <div onClick={toggleSidebar} className='flex pt-2 text-2xl flex-col items-center relative'>
+    <BsCart3/>
+    <p className="text-xs mt-1">My Side Bag</p>
+    </div>
+   
+  </button>
+
+<div className='relative'>
+<button onClick={toggleSidebar}>
+    <div onClick={toggleSidebar} className='flex pt-2 flex-col items-center relative'>
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path  className="dark:fill-white cursor-pointer" fillRule="evenodd" clipRule="evenodd" d="M16.9303 7C16.9621 6.92913 16.977 6.85189 16.9739 6.77432H17C16.8882 4.10591 14.6849 2 12.0049 2C9.325 2 7.12172 4.10591 7.00989 6.77432C6.9967 6.84898 6.9967 6.92535 7.00989 7H6.93171C5.65022 7 4.28034 7.84597 3.88264 10.1201L3.1049 16.3147C2.46858 20.8629 4.81062 22 7.86853 22H16.1585C19.2075 22 21.4789 20.3535 20.9133 16.3147L20.1444 10.1201C19.676 7.90964 18.3503 7 17.0865 7H16.9303ZM15.4932 7C15.4654 6.92794 15.4506 6.85153 15.4497 6.77432C15.4497 4.85682 13.8899 3.30238 11.9657 3.30238C10.0416 3.30238 8.48184 4.85682 8.48184 6.77432C8.49502 6.84898 8.49502 6.92535 8.48184 7H15.4932ZM9.097 12.1486C8.60889 12.1486 8.21321 11.7413 8.21321 11.2389C8.21321 10.7366 8.60889 10.3293 9.097 10.3293C9.5851 10.3293 9.98079 10.7366 9.98079 11.2389C9.98079 11.7413 9.5851 12.1486 9.097 12.1486ZM14.002 11.2389C14.002 11.7413 14.3977 12.1486 14.8858 12.1486C15.3739 12.1486 15.7696 11.7413 15.7696 11.2389C15.7696 10.7366 15.3739 10.3293 14.8858 10.3293C14.3977 10.3293 14.002 10.7366 14.002 11.2389Z" fill="#200E32" />
     </svg>
-    <p className="text-xs">My Bag</p>
+    <p className="text-xs mt-1">My Side Bag</p>
     </div>
+    <div  onClick={toggleSidebar} className="absolute top-0 left-0 bg-red-500 text-white rounded-full px-2">
+    {/* Replace '5' with the actual count of products in the cart */}
+    <span className="text-xs font-bold">{(clothingCart ? clothingCart.length : 0)+(electronicsCart ? electronicsCart.length : 0)+(miscCart ? miscCart.length : 0)
+}</span>
+  </div>
+  </button>
+  </div>
 
  { showLoginRegisterButton && <button
  onClick={handleLogin}
       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
-    >Login</button>}
+    ><GiArchiveRegister/>Login</button>}
 
      { showLoginRegisterButton && <button
      onClick={handleRegister}
       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
-    >SignUp</button>}
+    ><GiArchiveRegister/>SignUp</button>}
 
      { showLogoutButton && <button
      onClick={handleLogout}
       className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition-all duration-300"
-    >Logout</button>}
-    <div onClick={showProfileOptions} className="h-10 w-10 hover:ring-4 user cursor-pointer relative ring-blue-700/30 rounded-full bg-cover bg-center bg-[url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80')]">
-      
+    ><GiArchiveRegister/>Logout</button>}
+
+    
+    <div onClick={showProfileOptions} className="bg-black h-10 w-10 hover:ring-4 user cursor-pointer relative ring-blue-700/30 rounded-full bg-cover bg-center ">
+    {/* bg-[url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80')] */}
        <div className={`drop-down ${profileOptions} z-40 w-48 overflow-hidden bg-white rounded-md shadow absolute top-12 right-3`}>
         <ul>
           <li className="px-3 py-3 text-sm font-medium flex items-center space-x-2 hover:bg-slate-400">
@@ -184,29 +354,250 @@ const handleLogout = async () =>{
 
 
 {/* That is a sidebar */}
-<div className={`fixed z-40 overflow-y-auto top-0 right-0 h-full flex flex-col  rounded-l-lg bg-gray-200 w-72 transition-transform ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+<div className={`fixed  z-40 overflow-y-auto top-0 right-0 h-full flex flex-col  rounded-l-lg bg-gray-200 w-72 transition-transform ease-in-out transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+{/* w-72 */}
+      
       {/* Your sidebar content goes here */}
       <button onClick={toggleSidebar} className="text-gray-900 h-20 w-20  p-4 focus:outline-none">
         <IoMdClose className=''/>       
         {/* Close button */}
       </button>
 
+      {userNOTLoggedIn && <h3 className="flex text-sm ml-3 justify-center font-semibold mb-1">User Is Not Logged In Nothing to display in the cart</h3>}
+      <Link href={"/cart"} className="text-gray-900 bg-gray-100 rounded-lg p-4 m-auto hover:text-gray-100 hover:bg-gray-400">
+        Go To My Cart     
+        {/* Close button */}
+      </Link>
       {/* this is CART SIDEBAR  */}
-      <div className="bg-gray-100 m-4 p-2 rounded-md shadow-md  flex">
-    <div className="flex-shrink-0">
-        <img src="./images/One.jpg" alt="Product Image" className="w-16 h-16 object-cover rounded-md" />
-    </div>
-    <div className="flex-grow ml-2">
-        <h3 className="text-sm font-semibold mb-1">Product Name Lorem ncj f of  i io</h3>
+
+      {!userNOTLoggedIn && <h3 className="text-sm ml-3 font-semibold mb-1">Clothing</h3>}
+
+      {clothingCart && clothingCart.map(
+          (cartObject, index)=> (
+
+         
+          
+      <div key={index} className="bg-gray-100 m-4 p-0 rounded-md shadow-md  flex">
+        
+    <div
+                      
+                      className="aspect-w-3 aspect-h-4  min-w-600 overflow-hidden rounded-lg lg:block"
+                      style={{ maxWidth: '90px', maxHeight: '90px' }}
+                    >
+                      <img
+                        src={cartObject.colorSpecificImageUrls[0]}
+                        alt={cartObject.title}
+                        className="object-cover object-center w-full h-full"
+                        style={{ objectFit: 'cover' }}
+                        />
+                    </div>
+
+    <div className="flex-grow mx-3 my-2 ml-2">
+        <h3 className="text-sm font-semibold mb-1">{cartObject.title}</h3>
         <div className="flex items-center">
-            <p className="text-gray-600 text-sm mr-2">Price: $19.99</p>
-            <p className="text-gray-600 text-sm">Quantity: 3</p>
+            <p className="text-gray-600 text-sm mr-2">Price: ${cartObject.price}</p>
+            <p className="text-gray-600 text-sm">Quantity: {cartObject.quantity}</p>
         </div>
     </div>
 </div>
+       )
+       )}
 
+{!userNOTLoggedIn && <h3 className="text-sm ml-3 font-semibold mb-1">Electronics</h3>}
+
+       {electronicsCart && electronicsCart.map(
+          (cartObject, index)=> (
+
+         
+          
+      <div key={index} className="bg-gray-100 m-4 p-0 rounded-md shadow-md  flex">
+        
+    <div
+                      
+                      className="aspect-w-3 aspect-h-4  min-w-600 overflow-hidden rounded-lg lg:block"
+                      style={{ maxWidth: '90px', maxHeight: '90px' }}
+                    >
+                      <img
+                        src={cartObject.colorSpecificImageUrls[0]}
+                        alt={cartObject.title}
+                        className="object-cover object-center w-full h-full"
+                        style={{ objectFit: 'cover' }}
+                        />
+                    </div>
+
+    <div className="flex-grow mx-3 my-2 ml-2">
+        <h3 className="text-sm font-semibold mb-1">{cartObject.title}</h3>
+        <div className="flex items-center">
+            <p className="text-gray-600 text-sm mr-2">Price: ${cartObject.price}</p>
+            <p className="text-gray-600 text-sm">Quantity: {cartObject.quantity}</p>
+        </div>
+    </div>
+</div>
+       )
+       )}
+       
+       {!userNOTLoggedIn && <h3 className="text-sm ml-3 font-semibold mb-1">Others</h3>}
+
+      {miscCart && miscCart.map(
+          (cartObject, index)=> (
+
+         
+          
+      <div key={index} className="bg-gray-100 m-4 p-0 rounded-md shadow-md  flex">
+        
+    <div
+                      
+                      className="aspect-w-3 aspect-h-4  min-w-600 overflow-hidden rounded-lg lg:block"
+                      style={{ maxWidth: '90px', maxHeight: '90px' }}
+                    >
+                      <img
+                        src={cartObject.colorSpecificImageUrls[0]}
+                        alt={cartObject.title}
+                        className="object-cover object-center w-full h-full"
+                        style={{ objectFit: 'cover' }}
+                        />
+                    </div>
+
+    <div className="flex-grow mx-2 my-2 ml-2">
+        <h3 className="text-sm font-semibold mb-1">{cartObject.title}</h3>
+        <div className="flex items-center">
+            <p className="text-gray-600 text-sm mr-2">Price: ${cartObject.price}</p>
+            <p className="text-gray-600 text-sm">Quantity: {cartObject.quantity}</p>
+        </div>
+    </div>
+</div>
+       )
+       )}
 
     </div>
+{/* 
+    <div class="relative z-10" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+  <!--
+    Background backdrop, show/hide based on slide-over state.
+
+    Entering: "ease-in-out duration-500"
+      From: "opacity-0"
+      To: "opacity-100"
+    Leaving: "ease-in-out duration-500"
+      From: "opacity-100"
+      To: "opacity-0"
+  -->
+  <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+  <div class="fixed inset-0 overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+        <!--
+          Slide-over panel, show/hide based on slide-over state.
+
+          Entering: "transform transition ease-in-out duration-500 sm:duration-700"
+            From: "translate-x-full"
+            To: "translate-x-0"
+          Leaving: "transform transition ease-in-out duration-500 sm:duration-700"
+            From: "translate-x-0"
+            To: "translate-x-full"
+        -->
+        <div class="pointer-events-auto w-screen max-w-md">
+          <div class="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
+            <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+              <div class="flex items-start justify-between">
+                <h2 class="text-lg font-medium text-gray-900" id="slide-over-title">Shopping cart</h2>
+                <div class="ml-3 flex h-7 items-center">
+                  <button type="button" class="relative -m-2 p-2 text-gray-400 hover:text-gray-500">
+                    <span class="absolute -inset-0.5"></span>
+                    <span class="sr-only">Close panel</span>
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-8">
+                <div class="flow-root">
+                  <ul role="list" class="-my-6 divide-y divide-gray-200">
+                    <li class="flex py-6">
+                      <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                        <img src="https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-01.jpg" alt="Salmon orange fabric pouch with match zipper, gray zipper pull, and adjustable hip belt." class="h-full w-full object-cover object-center">
+                      </div>
+
+                      <div class="ml-4 flex flex-1 flex-col">
+                        <div>
+                          <div class="flex justify-between text-base font-medium text-gray-900">
+                            <h3>
+                              <a href="#">Throwback Hip Bag</a>
+                            </h3>
+                            <p class="ml-4">$90.00</p>
+                          </div>
+                          <p class="mt-1 text-sm text-gray-500">Salmon</p>
+                        </div>
+                        <div class="flex flex-1 items-end justify-between text-sm">
+                          <p class="text-gray-500">Qty 1</p>
+
+                          <div class="flex">
+                            <button type="button" class="font-medium text-indigo-600 hover:text-indigo-500">Remove</button>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="flex py-6">
+                      <div class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                        <img src="https://tailwindui.com/img/ecommerce-images/shopping-cart-page-04-product-02.jpg" alt="Front of satchel with blue canvas body, black straps and handle, drawstring top, and front zipper pouch." class="h-full w-full object-cover object-center">
+                      </div>
+
+                      <div class="ml-4 flex flex-1 flex-col">
+                        <div>
+                          <div class="flex justify-between text-base font-medium text-gray-900">
+                            <h3>
+                              <a href="#">Medium Stuff Satchel</a>
+                            </h3>
+                            <p class="ml-4">$32.00</p>
+                          </div>
+                          <p class="mt-1 text-sm text-gray-500">Blue</p>
+                        </div>
+                        <div class="flex flex-1 items-end justify-between text-sm">
+                          <p class="text-gray-500">Qty 1</p>
+
+                          <div class="flex">
+                            <button type="button" class="font-medium text-indigo-600 hover:text-indigo-500">Remove</button>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <!-- More products... -->
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 px-4 py-6 sm:px-6">
+              <div class="flex justify-between text-base font-medium text-gray-900">
+                <p>Subtotal</p>
+                <p>$262.00</p>
+              </div>
+              <p class="mt-0.5 text-sm text-gray-500">Shipping and taxes calculated at checkout.</p>
+              <div class="mt-6">
+                <a href="#" class="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700">Checkout</a>
+              </div>
+              <div class="mt-6 flex justify-center text-center text-sm text-gray-500">
+                <p>
+                  or
+                  <button type="button" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Continue Shopping
+                    <span aria-hidden="true"> &rarr;</span>
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> */}
+
+
     </div>
   )
 }
