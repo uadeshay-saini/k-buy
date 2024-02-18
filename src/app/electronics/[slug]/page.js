@@ -3,15 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPins, setPinStatus, setPin } from "@/provider/redux/pinSlice";
-import { fetchSingleClothingProducts } from "@/provider/redux/productSlice";
+import { fetchSingleElectronicsProducts } from "@/provider/redux/productSlice";
+import { addProductsToCart, setClothingId, setClothingColor, setClothingSize, setClothingQuantity } from "@/provider/redux/cartSlice";
 
 const slug = ({ params }) => {
   // const [pin, setPin] = useState([]);
   const [effect, setEffect] = useState([]);
 
-  const [clothingProducts, setClothingProducts] = useState();
+  const [electronicsProducts, setElectronicsProducts] = useState();
   const [selectedColorObjects, setSelectedColorObjects] = useState();
-
+  const [quantityForCart, setQuantityForCart] = useState(1)
+  const [colorForCart, setColorForCart] = useState()
   const dispatch = useDispatch();
   const pinsJson = useSelector((state) => state.pin.pinsJson);
   const pinStatus = useSelector((state) => state.pin.pinStatus);
@@ -41,17 +43,34 @@ const slug = ({ params }) => {
 
   const handleColorButtonClick = (colorObject) => {
     setSelectedColorObjects(colorObject);
+    setColorForCart(colorObject.color)
+    console.log(colorObject.color)
   };
-
+  const handleAddToCart = async () => {
+    let cartParam = {
+      electronics: [
+        {
+          _Id_OfProduct: params.slug,
+          timeOfAddition: "2024-01-20T10:01:20.562Z",
+          // color: colorForCart,
+          quantity: quantityForCart,
+        },
+      ],
+    }
+    const addElectronicsProductsToCart = await dispatch(
+      addProductsToCart(cartParam)
+    );
+    console.log(cartParam)
+  };
   useEffect(() => {
     (async () => {
       try {
         const fetchClothingProducts = await dispatch(
-          fetchSingleClothingProducts(params.slug)
+          fetchSingleElectronicsProducts(params.slug)
         );
         if (fetchClothingProducts.payload.statusCode <= 200) {
           if (fetchClothingProducts.payload.success) {
-            await setClothingProducts(
+            await setElectronicsProducts(
               fetchClothingProducts.payload.data.productDetails
             );
             setSelectedColorObjects(
@@ -89,13 +108,11 @@ const slug = ({ params }) => {
 
   return (
     <>
-      {clothingProducts && selectedColorObjects && (
-        <div>
-          main hu slug
-          <h2>{params.slug} </h2>
+      {electronicsProducts && selectedColorObjects && (
+        <div className="mt-10">
           <h1 className="text-2xl mx-5 font-bold tracking-tight text-gray-900 sm:text-3xl">
             {/* Basic Tee 6-Pack */}
-            {clothingProducts.title}
+            {electronicsProducts.title}
           </h1>
           <nav aria-label="Breadcrumb">
             <ol
@@ -109,7 +126,7 @@ const slug = ({ params }) => {
                     className="mr-2 text-sm font-medium text-gray-900"
                   >
                     {/* Men */}
-                    {clothingProducts.gender}
+                    {electronicsProducts.gender}
                   </a>
                   <svg
                     width="16"
@@ -151,7 +168,7 @@ const slug = ({ params }) => {
                   className="font-medium text-gray-500 hover:text-gray-600"
                 >
                   {/* Basic Tee 6-Pack */}
-                  {clothingProducts.title}
+                  {electronicsProducts.title}
                 </a>
               </li>
             </ol>
@@ -167,11 +184,11 @@ const slug = ({ params }) => {
                     <div
                       key={index}
                       className="aspect-w-3 aspect-h-4 mx-5 mt-5 min-w-600 overflow-hidden rounded-lg lg:block"
-                      style={{ maxWidth: '500px', maxHeight: '400px' }}
+                      style={{ maxWidth: '450px', maxHeight: '400px' }}
                     >
                       <img
                         src={imageUrl}
-                        alt={clothingProducts.title}
+                        alt={electronicsProducts.title}
                         className="object-cover object-center w-full h-full"
                         style={{ objectFit: 'cover' }}
                         />
@@ -179,24 +196,13 @@ const slug = ({ params }) => {
                   )
                 )}
 
-             
-                {/* <div className="hidden lg:grid lg:grid-cols-1 lg:gap-y-8">
-        <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg">
-          <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-tertiary-product-shot-01.jpg" alt="Model wearing plain black basic tee." className="h-full w-full object-cover object-center"/>
-        </div>
-        <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg">
-          <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-tertiary-product-shot-02.jpg" alt="Model wearing plain gray basic tee." className="h-full w-full object-cover object-center"/>
-        </div>
-      </div>
-      <div className="aspect-h-5 aspect-w-4 lg:aspect-h-4 lg:aspect-w-3 sm:overflow-hidden sm:rounded-lg">
-        <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-featured-product-shot.jpg" alt="Model wearing plain white basic tee." className="h-full w-full object-cover object-center"/>
-      </div> */}
+               
               </div>
               <div className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto,auto,1fr] lg:gap-x-8 lg:px-8 lg:pb-24 lg:pt-16">
                 <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
                   <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
                     {/* Basic Tee 6-Pack */}
-                    {clothingProducts.title}
+                    {electronicsProducts.title}
                   </h1>
                 </div>
 
@@ -204,7 +210,7 @@ const slug = ({ params }) => {
                 <div className="mt-4 lg:row-span-3 lg:mt-0">
                   <h2 className="sr-only">Product information</h2>
                   <p className="text-3xl tracking-tight text-gray-900">
-                    ${clothingProducts.price}
+                    ${electronicsProducts.price}
                   </p>
 
                   {/* <!-- Reviews --> */}
@@ -294,12 +300,9 @@ const slug = ({ params }) => {
                       <fieldset className="mt-4">
                         <legend className="sr-only">Choose a color</legend>
                         <div className="flex items-center space-x-3">
-                          {/* <!--    
-                  Active and Checked: "ring ring-offset-1"
-                  Not Active and Checked: "ring-2"
-                --> */}
+                        
 
-                          {clothingProducts.colorQuantityImages.map(
+                          {electronicsProducts.colorQuantityImages.map(
                             (colorObject, index) => (
                               // <button key={index} onClick={() => handleColorButtonClick(colorObject)}>
                               //   {colorObject.color}
@@ -334,10 +337,6 @@ const slug = ({ params }) => {
                             )
                           )}
 
-                          {/* <!--
-                  Active and Checked: "ring ring-offset-1"
-                  Not Active and Checked: "ring-2"
-                --> */}
                           {/* <label className="relative -m-0.5 flex cursor-pointer items-center justify-center rounded-full p-0.5 focus:outline-none ring-gray-400">
                         <input
                           type="radio"
@@ -378,91 +377,17 @@ const slug = ({ params }) => {
                       </fieldset>
                     </div>
 
-                    {/* <!-- Sizes --> */}
-                    <div className="mt-10">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-900">
-                          Size
-                        </h3>
-                        <a
-                          href="#"
-                          className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
-                        >
-                          Size guide
-                        </a>
-                      </div>
+                   
 
-     
-                      <fieldset className="mt-4">
-                        <legend className="sr-only">Choose a size</legend>
-                        <div className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4">
-                          {/* <!-- Active: "ring-2 ring-indigo-500" --> */}
-                          {
-                            Object.entries(selectedColorObjects.sizeQuantity[0]).map(([key, value]) => (
-                              <div key={key}>
-                                
-                                {value<=0? (<label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-not-allowed bg-gray-50 text-gray-200">
-                          <input
-                            type="radio"
-                            name="size-choice"
-                            value="XXS"
-                            disabled
-                            className="sr-only"
-                            aria-labelledby="size-choice-0-label"
-                          />
-                          <span id="size-choice-0-label">{key} {value}</span>
-                          <span
-                            aria-hidden="true"
-                            className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
-                          >
-                            <svg
-                              className="absolute inset-0 h-full w-full stroke-2 text-gray-200"
-                              viewBox="0 0 100 100"
-                              preserveAspectRatio="none"
-                              stroke="currentColor"
-                            >
-                              <line
-                                x1="0"
-                                y1="100"
-                                x2="100"
-                                y2="0"
-                                vectorEffect="non-scaling-stroke"
-                              />
-                            </svg>
-                          </span>
-                        </label>)
-                        :
-                        (<label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
-                            <input
-                              type="radio"
-                              name="size-choice"
-                              value="2XL"
-                              className="sr-only"
-                              aria-labelledby="size-choice-6-label"
-                            />
-                            <span id="size-choice-6-label">{key}</span>
-                            {/* <!--
-                    Active: "border", Not Active: "border-2"
-                    Checked: "border-indigo-500", Not Checked: "border-transparent"
-                  --> */}
-                            <span
-                              className="pointer-events-none absolute -inset-px rounded-md"
-                              aria-hidden="true"
-                            ></span>
-                          </label>)}
-                              </div>
-                            ))}
-                        </div>
-                      </fieldset>
-                    </div>
-
-                    <button
+                    
+                  </form>
+                  <button
+                    onClick={handleAddToCart}
                       type="submit"
                       className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
                       Add to bag
                     </button>
-                  </form>
                 </div>
 
                 <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pb-16 lg:pr-8 lg:pt-6">
@@ -478,7 +403,7 @@ const slug = ({ params }) => {
                     trendsetter? Try our exclusive colorway: &quot;Black&quot;.
                     Need to add an extra pop of color to your outfit? Our white
                     tee has you covered. */}
-                        {clothingProducts.description}
+                        {electronicsProducts.description}
                       </p>
                     </div>
                   </div>
@@ -528,7 +453,7 @@ const slug = ({ params }) => {
                     gray Basic Tees. Sign up for our subscription service and be
                     the first to get new, exciting colors, like our upcoming
                     &quot;Charcoal Gray&quot; limited release. */}
-                        {clothingProducts.fullDescription}
+                        {electronicsProducts.fullDescription}
                       </p>
                     </div>
                     <div className="flex mt-10">

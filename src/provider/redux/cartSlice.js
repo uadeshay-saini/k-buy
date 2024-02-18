@@ -2,29 +2,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { useSelector } from 'react-redux';
 
-// const clothingArray= {
-//     _Id_OfProduct: "65b4982067f139e7770094b0",
-//     color: "RED",
-//     size:"XXL",
-//     quantity:"0712"
-// }
-// const electronicsArray= {
-//     _Id_OfProduct: "65b3a467e30b93baa3630335",
-//     quantity:"0712"
-// }
-// const miscArray= {
-//     _Id_OfProduct: "65b3a475e30b93baa363033e",
-//     quantity:"0712"
-// }
-// const productsAdded = {
-//     clothing: [clothingArray],
-//     electronics: [electronicsArray],
-//     misc: [miscArray],
-// }
-
-// // const initialState = {
-// //     productsAdded: productsAdded
-// // };
 
 const initialState = {
     productsAdded: {
@@ -54,25 +31,7 @@ const initialState = {
     },
   };
   
-// Async thunk for fetching pins
-// export const fetchPins = createAsyncThunk('pin/fetchPins', async (_, thunkAPI) => {
-//   try {
-//     const response = await fetch("http://localhost:8000/api/v1/users/register")
-//     const registerJson = await response.json();
-
-//     thunkAPI.dispatch(setPinsJson(pinsJson));
-
-//     return pinsJson;
-//   } catch (error) {
-//     console.error("Error fetching pins:", error);
-//     throw error;
-//   }
-// });
-
-
-
-
-export const addProductsToCart = createAsyncThunk('cart/addProductsToCart', async (_, thunkAPI) => {
+export const addProductsToCart = createAsyncThunk('cart/addProductsToCart', async (cartParam, thunkAPI) => {
  
 
     const state = thunkAPI.getState();
@@ -82,6 +41,7 @@ export const addProductsToCart = createAsyncThunk('cart/addProductsToCart', asyn
 //   const state = thunkAPI.getState();
 //   const cart = state.cart;
   console.log(cart)
+ 
   try {
     
   console.log("cart");
@@ -91,7 +51,7 @@ export const addProductsToCart = createAsyncThunk('cart/addProductsToCart', asyn
       headers: {
         'Content-Type': 'application/json', 
       },
-      body: JSON.stringify(cart),
+      body: JSON.stringify({productsAdded:cartParam}),
     });
     
     const addedToCart = await response.json();
@@ -104,8 +64,71 @@ export const addProductsToCart = createAsyncThunk('cart/addProductsToCart', asyn
   })
 
 
+export const fetchCart = createAsyncThunk('cart/fetchCart', async (cartParam, thunkAPI) => {
+ 
+
+    const state = thunkAPI.getState();
+  const cart = state.cart; // Accessing the cart state
+
+  console.log(cart);
+//   const state = thunkAPI.getState();
+//   const cart = state.cart;
+  console.log(cart)
+ 
+  try {
+    
+  console.log("cart");
+    const response = await fetch(`http://localhost:8000/api/v1/cart/fetchcart`, {
+      method: 'POST',
+  credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json', 
+      },
+      body: JSON.stringify(),
+    });
+    
+    const addedToCart = await response.json();
+    console.log(addedToCart);
+      return addedToCart;
+  } catch (error) {
+    console.log("error occurred while fetching cart");
+  }
+
+  })
 //accessthe states in this state and do some research and do add the states 
 // export const registerUserr = createAsyncThunk('user/registerUserr', async (_
+
+export const deleteProductsToCart = createAsyncThunk('cart/deleteProductsToCart', async (cartParam, thunkAPI) => {
+ 
+
+  const state = thunkAPI.getState();
+const cart = state.cart; // Accessing the cart state
+
+console.log(cart);
+//   const state = thunkAPI.getState();
+//   const cart = state.cart;
+console.log(cart)
+
+try {
+  
+console.log("cart");
+  const response = await fetch(`http://localhost:8000/api/v1/cart/deleteproducttocart`, {
+    method: 'POST',
+credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json', 
+    },
+    body: JSON.stringify({productsAdded:cartParam}),
+  });
+  
+  const addedToCart = await response.json();
+  console.log(addedToCart);
+    return addedToCart;
+} catch (error) {
+  console.log("error occurred while deleting product from cart");
+}
+
+})
 
 
 export const loginUser = createAsyncThunk('user/loginUser', async (_, thunkAPI) => {
@@ -144,9 +167,18 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    // setRegisterUserName: (state, action) => {
-    //   state.register.username = action.payload;
-    // },
+    setClothingId: (state, action) => {
+      state.productsAdded.clothing[0]._Id_OfProduct = action.payload;
+    },
+    setClothingColor: (state, action) => {
+      state.productsAdded.clothing[0].color = action.payload;
+    },
+    setClothingSize: (state, action) => {
+      state.productsAdded.clothing[0].size = action.payload;
+    },
+    setClothingQuantity: (state, action) => {
+      state.productsAdded.clothing[0].quantity = action.payload;
+    },
     // setRegisterEmail: (state, action) => {
     //   state.register.email = action.payload;
     // },
@@ -184,5 +216,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const {  } = cartSlice.actions;
+export const { setClothingId, setClothingColor, setClothingSize, setClothingQuantity  } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPins, setPinStatus, setPin } from "@/provider/redux/pinSlice";
 import { fetchSingleClothingProducts } from "@/provider/redux/productSlice";
+import { addProductsToCart, setClothingId, setClothingColor, setClothingSize, setClothingQuantity } from "@/provider/redux/cartSlice";
+
 
 const slug = ({ params }) => {
   // const [pin, setPin] = useState([]);
@@ -11,8 +13,12 @@ const slug = ({ params }) => {
 
   const [clothingProducts, setClothingProducts] = useState();
   const [selectedColorObjects, setSelectedColorObjects] = useState();
-
+const [quantityForCart, setQuantityForCart] = useState(1)
+const [colorForCart, setColorForCart] = useState()
+const [sizeForCart, setSizeForCart] = useState()
   const dispatch = useDispatch();
+  const { clothing } = useSelector(state => state.cart.productsAdded);
+  
   const pinsJson = useSelector((state) => state.pin.pinsJson);
   const pinStatus = useSelector((state) => state.pin.pinStatus);
   const pin = useSelector((state) => state.pin.pin);
@@ -41,14 +47,39 @@ const slug = ({ params }) => {
 
   const handleColorButtonClick = (colorObject) => {
     setSelectedColorObjects(colorObject);
+    setColorForCart(colorObject.color)
+    console.log(colorObject.color)
+  };
+  const handleSizeButtonClick = (size) => {
+    setSizeForCart(size)
+    console.log(size)
+    console.log(quantityForCart)
   };
 
+  const handleAddToCart = async () => {
+    let cartParam = {
+      clothing: [
+        {
+          _Id_OfProduct: params.slug,
+          timeOfAddition: "2024-01-20T10:01:20.562Z",
+          color: colorForCart,
+          size: sizeForCart,
+          quantity: quantityForCart,
+        },
+      ],
+    }
+    const addClothingProductsToCart = await dispatch(
+      addProductsToCart(cartParam)
+    );
+    console.log(addClothingProductsToCart)
+  };
   useEffect(() => {
     (async () => {
       try {
         const fetchClothingProducts = await dispatch(
           fetchSingleClothingProducts(params.slug)
         );
+        console.log(fetchClothingProducts);
         if (fetchClothingProducts.payload.statusCode <= 200) {
           if (fetchClothingProducts.payload.success) {
             await setClothingProducts(
@@ -91,8 +122,6 @@ const slug = ({ params }) => {
     <>
       {clothingProducts && selectedColorObjects && (
         <div>
-          main hu slug
-          <h2>{params.slug} </h2>
           <h1 className="text-2xl mx-5 font-bold tracking-tight text-gray-900 sm:text-3xl">
             {/* Basic Tee 6-Pack */}
             {clothingProducts.title}
@@ -161,13 +190,10 @@ const slug = ({ params }) => {
               <div className=" sm:px-6   lg:gap-x-8 lg:px-8">
                 {selectedColorObjects.colorSpecificImageUrls.map(
                   (imageUrl, index) => (
-                    // <button key={index} onClick={() => handleColorButtonClick(colorObject)}>
-                    //   {colorObject.color}
-                    // </button>
                     <div
                       key={index}
                       className="aspect-w-3 aspect-h-4 mx-5 mt-5 min-w-600 overflow-hidden rounded-lg lg:block"
-                      style={{ maxWidth: '500px', maxHeight: '400px' }}
+                      style={{ maxWidth: '300px', maxHeight: '400px' }}
                     >
                       <img
                         src={imageUrl}
@@ -179,18 +205,6 @@ const slug = ({ params }) => {
                   )
                 )}
 
-             
-                {/* <div className="hidden lg:grid lg:grid-cols-1 lg:gap-y-8">
-        <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg">
-          <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-tertiary-product-shot-01.jpg" alt="Model wearing plain black basic tee." className="h-full w-full object-cover object-center"/>
-        </div>
-        <div className="aspect-h-2 aspect-w-3 overflow-hidden rounded-lg">
-          <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-tertiary-product-shot-02.jpg" alt="Model wearing plain gray basic tee." className="h-full w-full object-cover object-center"/>
-        </div>
-      </div>
-      <div className="aspect-h-5 aspect-w-4 lg:aspect-h-4 lg:aspect-w-3 sm:overflow-hidden sm:rounded-lg">
-        <img src="https://tailwindui.com/img/ecommerce-images/product-page-02-featured-product-shot.jpg" alt="Model wearing plain white basic tee." className="h-full w-full object-cover object-center"/>
-      </div> */}
               </div>
               <div className="mx-auto max-w-2xl px-4 pb-16 pt-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-3 lg:grid-rows-[auto,auto,1fr] lg:gap-x-8 lg:px-8 lg:pb-24 lg:pt-16">
                 <div className="lg:col-span-2 lg:border-r lg:border-gray-200 lg:pr-8">
@@ -434,6 +448,7 @@ const slug = ({ params }) => {
                         :
                         (<label className="group relative flex items-center justify-center rounded-md border py-3 px-4 text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none sm:flex-1 sm:py-6 cursor-pointer bg-white text-gray-900 shadow-sm">
                             <input
+                            onClick={()=>handleSizeButtonClick(key)}
                               type="radio"
                               name="size-choice"
                               value="2XL"
@@ -456,13 +471,21 @@ const slug = ({ params }) => {
                       </fieldset>
                     </div>
 
-                    <button
+                    {/* <button
+                      // onClick={handleAddToCart}
                       type="submit"
                       className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     >
-                      Add to bag
-                    </button>
+                      Add to Cart
+                    </button> */}
                   </form>
+                  <button
+                      onClick={handleAddToCart}
+                      type="submit"
+                      className="mt-10 flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                      Add to Cart
+                    </button>
                 </div>
 
                 <div className="py-10 lg:col-span-2 lg:col-start-1 lg:border-r lg:border-gray-200 lg:pb-16 lg:pr-8 lg:pt-6">
